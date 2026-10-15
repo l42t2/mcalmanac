@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="麦门黄历 · 在线体验版：基于麦当劳 MCP 的每日运势娱乐 Demo。摇一卦，看看今天宜什么、忌什么。">
+<title>麦门黄历 · 在线摇一卦</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #f6e7c8 0%, #efdcb4 40%, #e8d2a4 100%);
+    font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+    min-height: 100vh; color: #4a2c1a; padding: 26px 16px 60px;
+  }
+  .page-head { text-align: center; margin-bottom: 18px; }
+  .page-head h1 { font-size: 22px; color: #8c1f1b; letter-spacing: .12em; }
+  .page-head p { font-size: 12.5px; color: #9a7448; margin-top: 6px; }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .card {
+    width: 428px; max-width: 94vw; background:
+      repeating-linear-gradient(0deg, rgba(160,110,50,.035) 0 1px, transparent 1px 28px),
+      linear-gradient(180deg, #fdf8ec 0%, #faf1dc 100%);
+    border: 1px solid #b98d54; outline: 3px double #8c1f1b; outline-offset: -9px;
+    padding: 30px 26px 22px; position: relative;
+    box-shadow: 0 18px 44px rgba(90, 50, 10, .28);
+    transition: opacity .25s ease;
+  }
+  .card::after { content: ""; position: absolute; inset: 5px; pointer-events: none; border: 1px solid rgba(140,31,27,.18); }
+  .card.shaking { animation: shake .5s ease; }
+  @keyframes shake {
+    0% { transform: rotate(0); } 15% { transform: rotate(-2.2deg); }
+    35% { transform: rotate(2.2deg); } 55% { transform: rotate(-1.4deg); }
+    75% { transform: rotate(1deg); } 100% { transform: rotate(0); }
+  }
+  .card.reveal { animation: reveal .5s ease; }
+  @keyframes reveal { from { opacity: .25; } to { opacity: 1; } }
+  .brand { text-align: center; font-size: 13px; letter-spacing: .5em; color: #8c1f1b; margin-bottom: 6px; text-indent: .5em; }
+  h2.title { text-align: center; font-size: 40px; letter-spacing: .18em; color: #8c1f1b; font-weight: 900; text-indent: .18em; }
+  .date-line { text-align: center; margin-top: 8px; font-size: 13px; color: #6b4a2c; }
+  .ganzhi { text-align: center; font-size: 12px; color: #9a7448; margin-top: 3px; letter-spacing: .1em; }
+  .source-tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 99px; border: 1px solid #c9a26c; color: #8a6a3c; margin-top: 8px; }
+  .source-wrap { text-align: center; }
+  .hr { border: none; border-top: 1px dashed #c9a26c; margin: 16px 0; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .seal { width: 22px; height: 22px; border-radius: 5px; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+  .seal-yi { background: #1d7a44; } .seal-ji { background: #b0322b; }
+  ul { list-style: none; }
+  li { font-size: 14.5px; line-height: 1.75; }
+  li.live { color: #0f6b39; font-weight: 600; }
+  li .dot { color: #b98d54; margin-right: 6px; }
+  .bar { height: 14px; border: 1px solid #b98d54; background: #f3e5c8; border-radius: 8px; overflow: hidden; margin-top: 4px; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #f0b400, #e2762d); transition: width .6s ease; }
+  .wealth-line { display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px; color: #6b4a2c; }
+  .wealth-line b { color: #8c1f1b; font-size: 15px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 13px; color: #6b4a2c; }
+  .grid2 div { background: rgba(185,141,84,.1); border: 1px solid rgba(185,141,84,.35); border-radius: 8px; padding: 8px 10px; }
+  .grid2 b { color: #8c1f1b; }
+  .verse { margin-top: 14px; border: 1.5px dashed #b98d54; border-radius: 10px; padding: 16px 16px 12px; position: relative; background: rgba(255,252,242,.7); }
+  .verse .lvl { position: absolute; top: -12px; right: 14px; background: #8c1f1b; color: #fdf8ec; font-size: 12px; padding: 2px 10px; border-radius: 99px; letter-spacing: .1em; }
+  .verse p { font-size: 15.5px; line-height: 1.9; color: #4a2c1a; }
+  .verse .from { text-align: right; margin-top: 8px; color: #9a7448; font-size: 12px; }
+  .bless { text-align: center; font-size: 12px; color: #8c1f1b; margin-top: 12px; letter-spacing: .06em; }
+  .foot { margin-top: 18px; text-align: center; font-size: 11px; color: #a8845a; line-height: 1.9; }
+  .foot a { color: #8c1f1b; text-decoration: none; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn {
+    font-family: inherit; font-size: 14px; padding: 10px 22px; border-radius: 999px; cursor: pointer;
+    border: 1.5px solid #8c1f1b; background: #8c1f1b; color: #fdf8ec; letter-spacing: .08em;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(140,31,27,.3); }
+  .btn.ghost { background: transparent; color: #8c1f1b; }
+  .tips { text-align: center; font-size: 12px; color: #9a7448; max-width: 428px; line-height: 1.9; }
+  .tips code { background: rgba(140,31,27,.08); padding: 1px 6px; border-radius: 5px; font-family: Consolas, monospace; color: #8c1f1b; }
+  .copy-toast {
+    position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(20px);
+    background: #2b2016; color: #fdf8ec; font-size: 13px; padding: 10px 20px; border-radius: 99px;
+    opacity: 0; transition: all .3s ease; pointer-events: none; z-index: 99;
+  }
+  .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .fish-zone { text-align: center; margin-top: 8px; position: relative; }
+  .fish-btn {
+    font-family: inherit; cursor: pointer; background: transparent; border: none; color: #8c1f1b;
+    font-size: 13px; letter-spacing: .1em; padding: 8px 16px; border-radius: 12px;
+    border: 1px dashed rgba(140,31,27,.4);
+  }
+  .fish-btn:hover { background: rgba(140,31,27,.06); }
+  .merit-float {
+    position: absolute; font-size: 15px; color: #1d7a44; font-weight: 700; pointer-events: none;
+    animation: floatUp 1s ease forwards;
+  }
+  @keyframes floatUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-46px); } }
+  .merit-count { color: #1d7a44; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>🥠 麦门黄历 · 在线摸鱼版</h1>
+    <p>纯前端演示，数据为示例数据 · 完整版请见 GitHub（命令行 + 麦当劳 MCP 实时数据）</p>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card"></div>
+    <div class="controls">
+      <button class="btn" id="reroll">🎋 再摇一卦</button>
+      <button class="btn ghost" id="copy">📋 复制分享文案</button>
+      <a class="btn ghost" id="star" href="https://github.com/l42t2/mcalmanac" target="_blank" rel="noopener">⭐ 去 GitHub 点 Star</a>
+    </div>
+    <div class="fish-zone">
+      <button class="fish-btn" id="fish">🪵 敲一下电子木鱼（积功德）</button>
+      <div class="tips" style="margin-top:8px">今日已积功德：<span class="merit-count" id="merit">0</span>（据说 88 下会有神秘提示）</div>
+    </div>
+    <div class="tips">
+      正式版安装：<code>pip install mcalmanac</code> 或 <code>python -m mcalmanac --demo</code><br>
+      连接麦当劳 MCP 后，「宜」「忌」「财运」将基于你的真实优惠券 / 积分 / 活动数据生成。
+    </div>
+  </div>
+
+  <div class="copy-toast" id="toast">已复制，去群里散播一点玄学吧</div>
+
+<script>
+"use strict";
+
+/* ---------------- 数据与词池（与 Python 版同一套文案） ---------------- */
+
+const VERSES = {
+  "上上": ["薯条在手，天下我有；可乐加冰，万事可行。","板烧一出，万愁皆无；今日所愿，次第花开。","麦旋风一转，霉运全散；甜筒拿稳，好运扎根。","巨无霸有七层，好事也一层一层来；今日宜大展身手。","今日金拱门下喜气盈门，诸事皆宜，尤其宜多买一盒麦乐鸡。","咖啡最烫的第一口留给明天，好运最近的一班就在今天；宜果断。"],
+  "上": ["鸡块有五块，好事自会成双；蘸酱要够，心气要足。","一杯咖啡下肚，灵感自会来；今日宜谋大事，忌拖到明天。","汉堡有夹层，人生有转机；今日宜主动开口。","可乐冒泡的样子，就是你今天的状态——向上，且带劲。","早餐的圆满，是薯饼蘸蛋；今日宜早起一回，全天顺遂。","麦辣有辣劲，做事要带劲；今日宜一鼓作气。","冰淇淋不怕化，怕的是你不敢咬第一口；今日宜开始。","薯条要趁热，机会要趁早；今日宜当机立断。","大杯下肚，胆气自来；今日宜谈判，宜表白。","芝士会拉丝，好事会连环；今日宜顺着势头再走一步。"],
+  "中": ["平平淡淡才是真，一堡一饮正合适；今日宜稳，忌浪。","队伍有点长，好事在路上；今日宜耐心，忌催促。","番茄酱不必挤太多，日子也不用排太满；今日宜留白。","你点的餐还没好，你的时机还没到；今日宜等待，宜攒券。","汽水的气跑了一半，快乐不打折；今日宜乐观，忌计较。","有一根薯条短了一截，无妨；今日宜宽容，尤其对自己。","今日宜收拾桌面，顺手也收拾一下心情。","套餐里的中薯可以换大薯，小小的升级也是升级；今日宜对自己好一点。","你看了热量表，又点了一份鸡块——这叫诚实面对自我；今日宜和解。","今晚早睡十分钟，明天的你会谢谢今天的你；今日宜早睡。"],
+  "下": ["今日忌空腹逛菜单——看得越多，点得越多；先垫一垫再决定。","优惠券诚可贵，睡眠价更高；今日宜早睡，忌深夜冲动下单。","冰可乐虽好，贪杯易凉；今日宜温，忌贪。","今日诸事不宜催：催餐、催稿、催人——都不如先坐下。","今日或有小波折，像可乐洒了半杯——可惜，但还能再买；宜冷静，忌迁怒。","迷路不必慌，打开门店列表看看；今日宜问路，忌硬撑。"],
+  "彩蛋": ["据说看见这张签的人，今年的好运会多到需要朋友帮忙分担巨无霸。——麦门隐藏彩蛋签，看见即转运。"]
+};
+const VERSE_WEIGHTS = { "上上": 10, "上": 34, "中": 35, "下": 20, "彩蛋": 1 };
+
+const YI_POOL = ["宜加个蛋","宜把中薯换成大薯（今天配得上）","宜帮同事带一杯咖啡（人缘 +10）","宜到店取餐，顺便散步","宜在 11:11 下单（玄学上快 3 分钟）","宜组团拼单，人多力量大","宜对为你点单的人说声谢谢","宜尝试一个没吃过的新品"];
+const JI_POOL = ["忌深夜浏览菜单，尤其是炸物分类","忌一个人吃两份，还不承认","忌和番茄酱较劲（12 包是够的）","忌开会前吃太饱，犯困会影响发挥","忌忘记用券——凭实力多花的钱最可惜","忌在下午四点发誓减肥（且看明天）","忌羡慕别人的套餐，自己点的就是最好的"];
+const AUSPICIOUS_REASONS = ["灵感与胃口同时在线的时段","据说这个点下单，队伍最短","麦门钦定的「此时代谢最佳」窗口","适合突然想吃点好的的一切理由"];
+const FISH_BLESSINGS = {10:"十全十美，今日加个蛋不过分。",36:"薯条加成 +1（心理作用，但有效）。",66:"六六大顺，顺手把该领的券领了吧。",88:"麦门显灵！这一刻去给 mcalmanac 点 Star 的人会心想事成。",100:"功德圆满——恭喜解锁隐藏成就：麦门有缘人。"};
+
+const DEMO = {           // 与 CLI --demo 同源的示例数据
+  coupons: [
+    { name: "板烧鸡腿堡 8 元券", value: 8 },{ name: "中薯条买一送一券", value: 5.5 },
+    { name: "麦乐鸡 5 块 4 元券", value: 4 },{ name: "麦咖啡中杯 3 元券", value: 3 },
+    { name: "满 30 减 3 元券(麦乐送)", value: 3 }
+  ],
+  points: 3260,
+  lotteryCost: 99,
+  campaigns: ["麦麦脆脆薯条节", "1024 程序员节 · 麦门福利周"],
+  foods: [["板烧鸡腿堡",394],["巨无霸",516],["麦辣鸡腿堡",497],["双层吉士汉堡",447],["中薯条",289],["麦乐鸡(5块)",270],["麦旋风",270],["中杯可乐",134]]
+};
+
+/* ---------------- 确定性随机（同一天结果稳定） ---------------- */
+
+function strHash(s) {           // FNV-1a 32bit
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h;
+}
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pickWeighted(rnd, weights) {
+  const entries = Object.entries(weights);
+  const total = entries.reduce((sum, [, w]) => sum + w, 0);
+  let roll = rnd() * total;
+  for (const [key, w] of entries) { if ((roll -= w) < 0) return key; }
+  return entries[0][0];
+}
+function pickOne(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+function sample(rnd, arr, k) {
+  const copy = arr.slice(); const out = [];
+  while (out.length < k && copy.length) out.push(copy.splice(Math.floor(rnd() * copy.length), 1)[0]);
+  return out;
+}
+
+/* ---------------- 干支与中文日期 ---------------- */
+
+const TIANGAN = "甲乙丙丁戊己庚辛壬癸", DIZHI = "子丑寅卯辰巳午未申酉戌亥";
+const WEEK = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+const CN_NUM = "〇一二三四五六七八九";
+
+function jdn(y, m, d) {
+  const a = Math.floor((14 - m) / 12), yy = y + 4800 - a, mm = m + 12 * a - 3;
+  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+}
+function dayGanzhi(date) { const idx = (jdn(date.getFullYear(), date.getMonth() + 1, date.getDate()) + 49) % 60; return TIANGAN[idx % 10] + DIZHI[idx % 12]; }
+function yearGanzhi(y) { return TIANGAN[(y - 4) % 10] + DIZHI[(y - 4) % 12]; }
+function cnNumber(n) {
+  if (n < 10) return CN_NUM[n];
+  if (n === 10) return "十";
+  if (n < 20) return "十" + CN_NUM[n - 10];
+  if (n === 20) return "二十";
+  if (n < 30) return "二十" + CN_NUM[n - 20];
+  if (n === 30) return "三十";
+  return "三十" + CN_NUM[n - 30];
+}
+function cnDate(d) { return [...String(d.getFullYear())].map(c => CN_NUM[+c]).join("") + "年" + cnNumber(d.getMonth() + 1) + "月" + cnNumber(d.getDate()) + "日"; }
+
+/* ---------------- 黄历生成 ---------------- */
+
+function buildAlmanac(salt) {
+  const today = new Date();
+  const rnd = mulberry32(strHash(today.toISOString().slice(0, 10) + "|" + salt + "|" + DEMO.points));
+
+  const totalValue = DEMO.coupons.reduce((s, c) => s + c.value, 0);
+  const yi = [
+    { text: "宜薅券：「麦麦省」有 " + DEMO.coupons.length + " 张券可领，约省 ¥" + totalValue, live: true },
+    { text: "宜抽奖：积分够抽 " + Math.floor(DEMO.points / DEMO.lotteryCost) + " 次，今日手气在线", live: true },
+    { text: "宜参加「" + pickOne(rnd, DEMO.campaigns) + "」：正在进行中", live: true }
+  ].slice(0, 2);
+  sample(rnd, YI_POOL, 4 - yi.length).forEach(t => yi.push({ text: t, live: false }));
+
+  const ji = [{ text: pickOne(rnd, JI_POOL), live: false }];
+  sample(rnd, JI_POOL.filter(t => t !== ji[0].text), 2).forEach(t => ji.push({ text: t, live: false }));
+
+  let score = 55 + Math.min(DEMO.coupons.length * 4, 20) + Math.min(Math.floor(DEMO.points / 500), 10)
+            + Math.min(DEMO.campaigns.length * 3, 9) + Math.floor(rnd() * 13);
+  score = Math.max(40, Math.min(99, score));
+
+  const start = Math.floor(rnd() * 10 + 10) * 60 + Math.floor(rnd() * 60);
+  const end = start + 23 + Math.floor(rnd() * 44);
+  const fmt = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+
+  const level = pickWeighted(rnd, VERSE_WEIGHTS);
+  const food = pickOne(rnd, DEMO.foods);
+
+  return {
+    date: today, ganzhiDay: dayGanzhi(today), ganzhiYear: yearGanzhi(today.getFullYear()),
+    weekday: WEEK[today.getDay()], yi, ji, score, totalValue,
+    luckyNumber: 1 + Math.floor(rnd() * 99),
+    food: food[0], kcal: food[1],
+    time: fmt(start) + " – " + fmt(end), reason: pickOne(rnd, AUSPICIOUS_REASONS),
+    level, verse: pickOne(rnd, VERSES[level])
+  };
+}
+
+/* ---------------- 渲染 ---------------- */
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function render(a) {
+  const yiHTML = a.yi.map(item => {
+    const clean = item.text.startsWith("宜") ? item.text.slice(1) : item.text;
+    return `<li${item.live ? ' class="live"' : ""}><span class="dot">${item.live ? "★" : "·"}</span>${esc(clean)}</li>`;
+  }).join("");
+  const jiHTML = a.ji.map(item => {
+    const clean = item.text.startsWith("忌") ? item.text.slice(1) : item.text;
+    return `<li><span class="dot">·</span>${esc(clean)}</li>`;
+  }).join("");
+
+  document.getElementById("card").innerHTML = `
+    <div class="brand">1024 程序员节 · 每日玄学限定</div>
+    <h2 class="title">麦门黄历</h2>
+    <div class="date-line">${esc(cnDate(a.date))} · ${esc(a.weekday)}</div>
+    <div class="ganzhi">${esc(a.ganzhiYear)}年 · ${esc(a.ganzhiDay)}日</div>
+    <div class="source-wrap"><span class="source-tag">示例数据 · 在线体验版</span></div>
+    <hr class="hr">
+    <div class="section-title"><span class="seal seal-yi">宜</span>今日宜</div>
+    <ul>${yiHTML}</ul>
+    <div class="section-title" style="margin-top:14px"><span class="seal seal-ji">忌</span>今日忌</div>
+    <ul>${jiHTML}</ul>
+    <hr class="hr">
+    <div class="bar"><i style="width:${Math.max(4, Math.min(100, a.score))}%"></i></div>
+    <div class="wealth-line"><span>财运指数 <b>${a.score}</b> / 100</span><span>约省 ¥${a.totalValue}</span></div>
+    <div class="grid2">
+      <div>幸运数字<br><b>${a.luckyNumber}</b></div>
+      <div>麦门吉时<br><b>${esc(a.time)}</b></div>
+      <div style="grid-column: span 2">幸运餐品<br><b>${esc(a.food)}</b> <span style="font-size:12px">(${a.kcal} kcal)</span></div>
+    </div>
+    <div class="verse">
+      <span class="lvl">${esc(a.level)}签</span>
+      <p>「${esc(a.verse)}」</p>
+      <div class="from">—— 麦门 · ${esc(a.level)}签</div>
+    </div>
+    <div class="bless">薯条在手，天下我有 · 今日也请好好吃饭</div>
+    <div class="foot">
+      <a href="https://github.com/l42t2/mcalmanac" target="_blank" rel="noopener">mcalmanac</a> · 基于麦当劳 MCP 的每日黄历<br>
+      1024 程序员节麦当劳程序员创意开发大赛参赛作品 · 非麦当劳官方产品<br>
+      餐品/价格/活动信息以麦当劳官方渠道实时结果为准
+    </div>`;
+}
+
+function shareText(a) {
+  const yi = a.yi.slice(0, 3).map(i => i.text.split("：")[0].replace("宜", "")).join("、");
+  const ji = a.ji.slice(0, 2).map(i => i.text.replace("忌", "").split("：")[0]).join("、");
+  return `🥠 麦门黄历 · ${a.date.getMonth() + 1}月${a.date.getDate()}日 · ${a.ganzhiDay}日\n宜：${yi}\n忌：${ji}\n财运 ${a.score}/100，可省约 ¥${a.totalValue}\n签：${a.verse}\n—— 麦门 · ${a.level}签\n来算算你的 👉 https://github.com/l42t2/mcalmanac`;
+}
+
+/* ---------------- 交互 ---------------- */
+
+let salt = 0, current = buildAlmanac("0");
+render(current);
+
+document.getElementById("reroll").addEventListener("click", () => {
+  const card = document.getElementById("card");
+  card.classList.remove("reveal");
+  card.classList.add("shaking");
+  setTimeout(() => {
+    salt += 1;
+    current = buildAlmanac(String(salt));
+    render(current);
+    card.classList.remove("shaking");
+    card.classList.add("reveal");
+  }, 480);
+});
+
+document.getElementById("copy").addEventListener("click", async () => {
+  const text = shareText(current);
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 1600);
+});
+
+/* 电子木鱼 */
+let merit = 0;
+const fishBtn = document.getElementById("fish");
+fishBtn.addEventListener("click", (e) => {
+  merit += 1;
+  document.getElementById("merit").textContent = String(merit);
+  const rect = fishBtn.getBoundingClientRect();
+  const float = document.createElement("div");
+  float.className = "merit-float";
+  float.textContent = "功德 +1";
+  float.style.left = (rect.left + rect.width / 2 - 24) + "px";
+  float.style.top = (rect.top - 6) + "px";
+  float.style.position = "fixed";
+  document.body.appendChild(float);
+  setTimeout(() => float.remove(), 1000);
+  if (FISH_BLESSINGS[merit]) {
+    const toast = document.getElementById("toast");
+    toast.textContent = "✨ " + FISH_BLESSINGS[merit];
+    toast.classList.add("show");
+    setTimeout(() => { toast.classList.remove("show"); toast.textContent = "已复制，去群里散播一点玄学吧"; }, 2600);
+  }
+});
+</script>
+</body>
+</html>

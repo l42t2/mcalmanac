@@ -1,0 +1,28 @@
+[project]
+name = "mcalmanac"
+version = "1.0.0"
+description = "🥠 麦门黄历：把麦当劳 MCP 的真实数据（优惠券/积分/抽奖/活动/营养）变成一份每天能摇的电子黄历"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "mcalmanac contributors" }]
+keywords = ["mcp", "mcdonalds", "almanac", "fortune", "cli", "1024"]
+classifiers = [
+  "Environment :: Console",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Games/Entertainment",
+]
+
+[project.urls]
+Homepage = "https://github.com/l42t2/mcalmanac"
+
+[project.scripts]
+mcalmanac = "mcalmanac.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mcalmanac*"]
